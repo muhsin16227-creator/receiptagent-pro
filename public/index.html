@@ -302,7 +302,7 @@
   // Auto-format input as RA-BETA-XXXX-XXXX
   const codeInput = document.getElementById('codeInput');
   codeInput.addEventListener('input', function() {
-    let v = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    let v = this.value.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase();
     this.value = v;
   });
 
