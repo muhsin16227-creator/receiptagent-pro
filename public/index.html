@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReceiptAgent Pro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --border: #1e1e1e;
+    --accent: #00e5a0;
+    --accent-dim: #00e5a015;
+    --text: #f0f0f0;
+    --muted: #666;
+    --danger: #ff4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.4;
+    z-index: 0;
+  }
+
+  .glow {
+    position: fixed;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, #00e5a020 0%, transparent 70%);
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .logo-area {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .logo-icon {
+    width: 56px; height: 56px;
+    background: var(--accent);
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    font-size: 26px;
+  }
+
+  .logo-text {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .card-sub {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.5;
+  }
+
+  .input-group {
+    margin-bottom: 16px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  input[type="text"], input[type="password"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 2px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  input[type="text"]:focus, input[type="password"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  input::placeholder { color: var(--muted); letter-spacing: 1px; }
+
+  .btn {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+
+  .btn-primary:hover { background: #00ffb3; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .msg {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .msg.error { background: #ff444415; border: 1px solid #ff444440; color: var(--danger); display: block; }
+  .msg.success { background: #00e5a015; border: 1px solid #00e5a040; color: var(--accent); display: block; }
+
+  .expiry-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-dim);
+    border: 1px solid #00e5a030;
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 16px;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid #000;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+
+  .footer-note {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  .footer-note a { color: var(--accent); text-decoration: none; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="container">
+  <div class="logo-area">
+    <div class="logo-icon">🧾</div>
+    <div class="logo-text">Receipt<span>Agent</span> Pro</div>
+    <div class="tagline">PROFESSIONAL RECEIPT MANAGEMENT</div>
+  </div>
+
+  <div class="card" id="mainCard">
+    <div class="card-title">Enter Your License Code</div>
+    <div class="card-sub">Enter the code you received to access ReceiptAgent Pro for your business.</div>
+
+    <div class="input-group">
+      <label>License Code</label>
+      <input type="text" id="codeInput" placeholder="RA-BETA-XXXX-XXXX" maxlength="20" autocomplete="off" />
+    </div>
+
+    <button class="btn btn-primary" onclick="verifyLicense()" id="verifyBtn">
+      Activate License
+    </button>
+
+    <div class="divider">or</div>
+
+    <button class="btn btn-ghost" onclick="contactSupport()">
+      📲 Request a License Code
+    </button>
+
+    <div id="msg" class="msg"></div>
+  </div>
+
+  <div class="footer-note">
+    Need help? Contact us on WhatsApp<br>
+    <a href="https://wa.me/256700000000" target="_blank">+256 700 000 000</a>
+  </div>
+</div>
+
+<script>
+  // Auto-format input as RA-BETA-XXXX-XXXX
+  const codeInput = document.getElementById('codeInput');
+  codeInput.addEventListener('input', function() {
+    let v = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    this.value = v;
+  });
+
+  codeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') verifyLicense();
+  });
+
+  function showMsg(text, type) {
+    const el = document.getElementById('msg');
+    el.className = 'msg ' + type;
+    el.textContent = text;
+  }
+
+  async function verifyLicense() {
+    const code = codeInput.value.trim();
+    if (!code) { showMsg('Please enter your license code.', 'error'); return; }
+
+    const btn = document.getElementById('verifyBtn');
+    btn.innerHTML = '<span class="spinner"></span> Verifying...';
+    btn.disabled = true;
+
+    try {
+      const deviceId = getDeviceId();
+      const res = await fetch('/api/verify-license', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, device_id: deviceId })
+      });
+
+      const data = await res.json();
+
+      if (data.valid) {
+        // Store license in session
+        sessionStorage.setItem('ra_license', code);
+        sessionStorage.setItem('ra_type', data.type);
+        if (data.expires_at) sessionStorage.setItem('ra_expires', data.expires_at);
+        if (data.business_name) sessionStorage.setItem('ra_business', data.business_name);
+
+        showMsg('✓ License verified. Loading your workspace...', 'success');
+        setTimeout(() => { window.location.href = '/app.html'; }, 1200);
+      } else {
+        showMsg(data.reason || 'Invalid license code. Contact support.', 'error');
+        btn.innerHTML = 'Activate License';
+        btn.disabled = false;
+      }
+    } catch (e) {
+      showMsg('Connection error. Check your internet and try again.', 'error');
+      btn.innerHTML = 'Activate License';
+      btn.disabled = false;
+    }
+  }
+
+  function getDeviceId() {
+    let id = localStorage.getItem('ra_device_id');
+    if (!id) {
+      id = 'DEV-' + Math.random().toString(36).substr(2, 12).toUpperCase();
+      localStorage.setItem('ra_device_id', id);
+    }
+    return id;
+  }
+
+  function contactSupport() {
+    window.open('https://wa.me/256700000000?text=Hello, I would like to get a ReceiptAgent Pro license for my business.', '_blank');
+  }
+
+  // If already logged in, redirect
+  if (sessionStorage.getItem('ra_license')) {
+    window.location.href = '/app.html';
+  }
+</script>
+</body>
+</html>
