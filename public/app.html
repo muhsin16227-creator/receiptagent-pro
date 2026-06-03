@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReceiptAgent Pro — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111;
+    --surface2: #161616;
+    --border: #1e1e1e;
+    --accent: #00e5a0;
+    --accent-dim: #00e5a015;
+    --text: #f0f0f0;
+    --muted: #666;
+    --danger: #ff4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* TOP NAV */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-logo { font-size: 16px; font-weight: 800; }
+  .nav-logo span { color: var(--accent); }
+
+  .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .badge {
+    background: var(--accent-dim);
+    border: 1px solid #00e5a030;
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .btn-sm {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* FORM SIDE */
+  .form-side {
+    padding: 32px;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-family: 'DM Mono', monospace;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .form-group { margin-bottom: 14px; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  input[type="text"], input[type="number"], input[type="tel"], textarea, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+  }
+
+  textarea { resize: vertical; min-height: 60px; }
+
+  select option { background: var(--surface2); }
+
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row-3 { display: grid; grid-template-columns: 1fr 1fr 80px; gap: 10px; }
+
+  .item-list { margin-bottom: 12px; }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 90px 36px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+
+  .item-subtotal {
+    font-size: 12px;
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    text-align: right;
+    padding: 10px 12px;
+    background: var(--accent-dim);
+    border: 1px solid #00e5a020;
+    border-radius: 8px;
+  }
+
+  .btn-remove {
+    background: #ff444420;
+    border: 1px solid #ff444440;
+    color: var(--danger);
+    border-radius: 6px;
+    padding: 0;
+    width: 36px; height: 36px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+
+  .btn-remove:hover { background: #ff444440; }
+
+  .btn-add {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 10px;
+    width: 100%;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    transition: all 0.2s;
+    margin-bottom: 20px;
+  }
+
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  .action-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .btn-action {
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-generate {
+    background: var(--accent);
+    color: #000;
+    grid-column: 1 / -1;
+    padding: 15px;
+    font-size: 15px;
+  }
+
+  .btn-generate:hover { background: #00ffb3; }
+
+  .btn-print { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .btn-print:hover { border-color: var(--accent); }
+
+  .btn-pdf { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .btn-pdf:hover { border-color: #7c3aed; color: #7c3aed; }
+
+  /* PREVIEW SIDE */
+  .preview-side {
+    padding: 32px 24px;
+    background: var(--surface);
+    overflow-y: auto;
+    position: sticky;
+    top: 60px;
+    height: calc(100vh - 60px);
+  }
+
+  /* RECEIPT PREVIEW */
+  #receiptPreview {
+    background: #fff;
+    color: #111;
+    border-radius: 8px;
+    padding: 24px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    max-width: 320px;
+    margin: 0 auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .receipt-header { text-align: center; margin-bottom: 16px; border-bottom: 1px dashed #ccc; padding-bottom: 12px; }
+  .receipt-biz { font-size: 15px; font-weight: bold; font-family: 'Syne', sans-serif; }
+  .receipt-contact { font-size: 10px; color: #666; margin-top: 2px; }
+  .receipt-meta { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 10px; color: #666; }
+  .receipt-customer { margin-bottom: 12px; font-size: 11px; }
+
+  .receipt-items { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  .receipt-items th { text-align: left; font-size: 9px; color: #999; text-transform: uppercase; border-bottom: 1px solid #eee; padding: 4px 0; }
+  .receipt-items td { padding: 5px 0; font-size: 11px; vertical-align: top; }
+  .receipt-items .right { text-align: right; }
+
+  .receipt-totals { border-top: 1px dashed #ccc; padding-top: 8px; margin-bottom: 12px; }
+  .receipt-total-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
+  .receipt-total-row.grand { font-weight: bold; font-size: 14px; border-top: 1px solid #111; padding-top: 6px; margin-top: 6px; }
+
+  .receipt-footer { text-align: center; font-size: 10px; color: #999; border-top: 1px dashed #ccc; padding-top: 10px; }
+  .receipt-thank { font-size: 12px; font-weight: bold; color: #111; margin-bottom: 4px; font-family: 'Syne', sans-serif; }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .preview-side { position: static; height: auto; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Receipt<span>Agent</span> Pro</div>
+  <div class="nav-right">
+    <span class="badge" id="licBadge">BETA</span>
+    <button class="btn-sm" onclick="openFeedback()">💬 Feedback</button>
+    <button class="btn-sm" onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<div class="layout">
+  <!-- FORM -->
+  <div class="form-side">
+    <div class="section-title">Business Info</div>
+    <div class="row">
+      <div class="form-group">
+        <label>Business Name</label>
+        <input type="text" id="bizName" placeholder="e.g. Muhsin Shop" />
+      </div>
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="bizPhone" placeholder="0700 000 000" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Address (optional)</label>
+      <input type="text" id="bizAddress" placeholder="Kampala, Uganda" />
+    </div>
+
+    <div class="section-title" style="margin-top:24px">Customer Info</div>
+    <div class="row">
+      <div class="form-group">
+        <label>Customer Name</label>
+        <input type="text" id="custName" placeholder="Customer" />
+      </div>
+      <div class="form-group">
+        <label>Customer Phone</label>
+        <input type="tel" id="custPhone" placeholder="Optional" />
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:24px">Items</div>
+    <div class="item-list" id="itemList"></div>
+    <button class="btn-add" onclick="addItem()">+ Add Item</button>
+
+    <div class="section-title">Payment</div>
+    <div class="row">
+      <div class="form-group">
+        <label>Payment Method</label>
+        <select id="payMethod">
+          <option>Cash</option>
+          <option>MTN Mobile Money</option>
+          <option>Airtel Money</option>
+          <option>Bank Transfer</option>
+          <option>Credit</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tax % (optional)</label>
+        <input type="number" id="taxPct" placeholder="0" min="0" max="100" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Note (optional)</label>
+      <textarea id="note" placeholder="Thank you for your business..."></textarea>
+    </div>
+
+    <div class="action-btns">
+      <button class="btn-action btn-generate" onclick="generateReceipt()">Generate Receipt</button>
+      <button class="btn-action btn-print" onclick="printReceipt()">🖨 Print</button>
+      <button class="btn-action btn-pdf" onclick="downloadPDF()">📄 Save PDF</button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="preview-side">
+    <div class="section-title">Live Preview</div>
+    <div id="receiptPreview">
+      <div class="receipt-header">
+        <div class="receipt-biz" id="prev-biz">Your Business Name</div>
+        <div class="receipt-contact" id="prev-contact">Phone · Address</div>
+      </div>
+      <div class="receipt-meta">
+        <span id="prev-date">Date: —</span>
+        <span id="prev-receipt-no">Receipt #000</span>
+      </div>
+      <div class="receipt-customer" id="prev-customer"></div>
+      <table class="receipt-items">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="right">Qty</th>
+            <th class="right">Price</th>
+            <th class="right">Total</th>
+          </tr>
+        </thead>
+        <tbody id="prev-items"></tbody>
+      </table>
+      <div class="receipt-totals">
+        <div class="receipt-total-row"><span>Subtotal</span><span id="prev-subtotal">UGX 0</span></div>
+        <div class="receipt-total-row" id="prev-tax-row" style="display:none"><span>Tax</span><span id="prev-tax">UGX 0</span></div>
+        <div class="receipt-total-row grand"><span>TOTAL</span><span id="prev-total">UGX 0</span></div>
+      </div>
+      <div class="receipt-footer">
+        <div class="receipt-thank">Thank You!</div>
+        <div id="prev-method">Payment: Cash</div>
+        <div id="prev-note" style="margin-top:6px;color:#777"></div>
+        <div style="margin-top:8px;font-size:9px;color:#bbb">Powered by ReceiptAgent Pro</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEEDBACK MODAL -->
+<div id="feedbackModal" style="display:none;position:fixed;inset:0;background:#000a;z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#111;border:1px solid #1e1e1e;border-radius:16px;padding:32px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto;">
+    <h2 style="margin-bottom:4px;font-size:18px">Share Your Feedback</h2>
+    <p style="color:#666;font-size:13px;margin-bottom:24px">Help us improve ReceiptAgent Pro</p>
+
+    <div class="form-group"><label>Your Name</label><input type="text" id="fb-name" /></div>
+    <div class="form-group"><label>Phone</label><input type="tel" id="fb-phone" /></div>
+    <div class="form-group"><label>Business Name</label><input type="text" id="fb-biz" /></div>
+    <div class="form-group">
+      <label>Rating (1-5)</label>
+      <select id="fb-rating"><option>5 - Excellent</option><option>4 - Good</option><option>3 - Average</option><option>2 - Poor</option><option>1 - Very Poor</option></select>
+    </div>
+    <div class="form-group"><label>What worked well?</label><textarea id="fb-good"></textarea></div>
+    <div class="form-group"><label>What confused you?</label><textarea id="fb-confused"></textarea></div>
+    <div class="form-group"><label>Missing features?</label><textarea id="fb-missing"></textarea></div>
+    <div class="form-group"><label>Any bugs?</label><textarea id="fb-bugs"></textarea></div>
+    <div class="form-group">
+      <label>Would you pay for this?</label>
+      <select id="fb-pay"><option>Yes, definitely</option><option>Maybe</option><option>No</option></select>
+    </div>
+    <div class="form-group"><label>Suggested monthly price (UGX)</label><input type="text" id="fb-price" placeholder="e.g. 20000" /></div>
+
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn-action btn-generate" style="flex:1;padding:13px;border:none;background:#00e5a0;color:#000;border-radius:10px;font-weight:700;cursor:pointer;" onclick="submitFeedback()">Submit</button>
+      <button style="padding:13px 20px;border:1px solid #1e1e1e;background:none;color:#666;border-radius:10px;cursor:pointer;" onclick="closeFeedback()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── AUTH CHECK ──────────────────────────────────────────
+  const LICENSE = sessionStorage.getItem('ra_license');
+  if (!LICENSE) window.location.href = '/';
+
+  const EXPIRES = sessionStorage.getItem('ra_expires');
+  if (EXPIRES) {
+    const badge = document.getElementById('licBadge');
+    const exp = new Date(EXPIRES);
+    const days = Math.ceil((exp - new Date()) / 86400000);
+    badge.textContent = days > 0 ? `BETA · ${days}d left` : 'EXPIRED';
+    if (days <= 0) { alert('Your trial has expired. Please contact us to continue.'); window.location.href = '/'; }
+  }
+
+  // Load saved biz info
+  const savedBiz = localStorage.getItem('ra_biz_info');
+  if (savedBiz) {
+    const b = JSON.parse(savedBiz);
+    document.getElementById('bizName').value = b.name || '';
+    document.getElementById('bizPhone').value = b.phone || '';
+    document.getElementById('bizAddress').value = b.address || '';
+  }
+
+  // ── ITEMS ───────────────────────────────────────────────
+  let items = [{ name: '', qty: 1, price: '' }];
+  let receiptCounter = parseInt(localStorage.getItem('ra_receipt_count') || '0') + 1;
+
+  function renderItems() {
+    const list = document.getElementById('itemList');
+    list.innerHTML = '';
+    items.forEach((item, i) => {
+      const sub = (parseFloat(item.qty) || 0) * (parseFloat(item.price) || 0);
+      list.innerHTML += `
+        <div class="item-row">
+          <input type="text" placeholder="Item name" value="${item.name}" oninput="items[${i}].name=this.value;updatePreview()" />
+          <input type="number" placeholder="Qty" value="${item.qty}" min="1" oninput="items[${i}].qty=this.value;updatePreview()" />
+          <input type="number" placeholder="Price" value="${item.price}" min="0" oninput="items[${i}].price=this.value;updatePreview()" />
+          <button class="btn-remove" onclick="removeItem(${i})">×</button>
+        </div>
+        <div class="item-subtotal">${sub > 0 ? 'UGX ' + fmt(sub) : '—'}</div>
+      `;
+    });
+    updatePreview();
+  }
+
+  function addItem() {
+    items.push({ name: '', qty: 1, price: '' });
+    renderItems();
+  }
+
+  function removeItem(i) {
+    if (items.length === 1) return;
+    items.splice(i, 1);
+    renderItems();
+  }
+
+  function fmt(n) {
+    return Number(n).toLocaleString();
+  }
+
+  // ── PREVIEW ─────────────────────────────────────────────
+  function updatePreview() {
+    const biz = document.getElementById('bizName').value || 'Your Business';
+    const phone = document.getElementById('bizPhone').value;
+    const addr = document.getElementById('bizAddress').value;
+    const cust = document.getElementById('custName').value;
+    const taxPct = parseFloat(document.getElementById('taxPct').value) || 0;
+    const method = document.getElementById('payMethod').value;
+    const note = document.getElementById('note').value;
+
+    document.getElementById('prev-biz').textContent = biz;
+    document.getElementById('prev-contact').textContent = [phone, addr].filter(Boolean).join(' · ') || 'Contact info';
+    document.getElementById('prev-date').textContent = 'Date: ' + new Date().toLocaleDateString('en-GB');
+    document.getElementById('prev-receipt-no').textContent = 'Receipt #' + String(receiptCounter).padStart(3, '0');
+    document.getElementById('prev-customer').textContent = cust ? 'Customer: ' + cust : '';
+    document.getElementById('prev-method').textContent = 'Payment: ' + method;
+    document.getElementById('prev-note').textContent = note;
+
+    let subtotal = 0;
+    const tbody = document.getElementById('prev-items');
+    tbody.innerHTML = '';
+    items.forEach(item => {
+      if (!item.name && !item.price) return;
+      const total = (parseFloat(item.qty) || 1) * (parseFloat(item.price) || 0);
+      subtotal += total;
+      tbody.innerHTML += `<tr>
+        <td>${item.name || '—'}</td>
+        <td class="right">${item.qty || 1}</td>
+        <td class="right">${fmt(item.price || 0)}</td>
+        <td class="right">${fmt(total)}</td>
+      </tr>`;
+    });
+
+    const tax = subtotal * (taxPct / 100);
+    const grand = subtotal + tax;
+
+    document.getElementById('prev-subtotal').textContent = 'UGX ' + fmt(subtotal);
+    document.getElementById('prev-total').textContent = 'UGX ' + fmt(grand);
+
+    const taxRow = document.getElementById('prev-tax-row');
+    if (taxPct > 0) {
+      taxRow.style.display = 'flex';
+      document.getElementById('prev-tax').textContent = 'UGX ' + fmt(tax);
+    } else {
+      taxRow.style.display = 'none';
+    }
+
+    // Save biz info
+    localStorage.setItem('ra_biz_info', JSON.stringify({
+      name: document.getElementById('bizName').value,
+      phone, address: addr
+    }));
+  }
+
+  // Live update listeners
+  ['bizName','bizPhone','bizAddress','custName','custPhone','taxPct','payMethod','note']
+    .forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
+
+  function generateReceipt() {
+    updatePreview();
+    receiptCounter++;
+    localStorage.setItem('ra_receipt_count', receiptCounter - 1);
+
+    // Save to backend
+    const data = {
+      business: document.getElementById('bizName').value,
+      customer: document.getElementById('custName').value,
+      items: items,
+      payment: document.getElementById('payMethod').value,
+      date: new Date().toISOString()
+    };
+
+    fetch('/api/receipts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license_code: LICENSE, receipt_data: data })
+    }).catch(() => {});
+
+    alert('Receipt generated! Use Print or Save PDF to export.');
+  }
+
+  function printReceipt() {
+    const preview = document.getElementById('receiptPreview');
+    const w = window.open('', '_blank');
+    w.document.write('<html><head><title>Receipt</title><style>body{font-family:monospace;padding:20px}@media print{body{padding:0}}</style></head><body>');
+    w.document.write(preview.outerHTML);
+    w.document.write('</body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(() => w.print(), 500);
+  }
+
+  async function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const preview = document.getElementById('receiptPreview');
+    const canvas = await html2canvas(preview, { scale: 2, backgroundColor: '#ffffff' });
+    const img = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({ unit: 'px', format: [canvas.width / 2, canvas.height / 2] });
+    pdf.addImage(img, 'PNG', 0, 0, canvas.width / 2, canvas.height / 2);
+    pdf.save(`Receipt-${Date.now()}.pdf`);
+
+    fetch('/api/analytics', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ license_code: LICENSE, event: 'pdf_downloaded' })
+    }).catch(() => {});
+  }
+
+  // ── FEEDBACK ────────────────────────────────────────────
+  function openFeedback() {
+    const m = document.getElementById('feedbackModal');
+    m.style.display = 'flex';
+  }
+
+  function closeFeedback() {
+    document.getElementById('feedbackModal').style.display = 'none';
+  }
+
+  async function submitFeedback() {
+    const data = {
+      license_code: LICENSE,
+      name: document.getElementById('fb-name').value,
+      phone: document.getElementById('fb-phone').value,
+      business_name: document.getElementById('fb-biz').value,
+      rating: parseInt(document.getElementById('fb-rating').value),
+      what_worked: document.getElementById('fb-good').value,
+      what_confused: document.getElementById('fb-confused').value,
+      missing_features: document.getElementById('fb-missing').value,
+      bugs: document.getElementById('fb-bugs').value,
+      would_pay: document.getElementById('fb-pay').value,
+      suggested_price: document.getElementById('fb-price').value
+    };
+
+    await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    closeFeedback();
+    alert('Thank you for your feedback!');
+  }
+
+  function logout() {
+    sessionStorage.clear();
+    window.location.href = '/';
+  }
+
+  // Init
+  renderItems();
+  updatePreview();
+</script>
+</body>
+</html>

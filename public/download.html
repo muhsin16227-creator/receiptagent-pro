@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Download — ReceiptAgent Pro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+  :root { --bg:#0a0a0a;--surface:#111;--border:#1e1e1e;--accent:#00e5a0;--text:#f0f0f0;--muted:#666; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;max-width:420px;width:100%;text-align:center}
+  .icon{font-size:48px;margin-bottom:20px}
+  h1{font-size:22px;margin-bottom:8px}
+  p{color:var(--muted);font-size:13px;margin-bottom:28px;line-height:1.6;font-family:'DM Mono',monospace}
+  .btn{display:block;width:100%;padding:15px;background:var(--accent);color:#000;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;transition:background 0.2s}
+  .btn:hover{background:#00ffb3}
+  .note{margin-top:16px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+  .locked{display:flex;flex-direction:column;align-items:center}
+</style>
+</head>
+<body>
+<div class="card" id="content">
+  <div class="locked" id="checkingState">
+    <div class="icon">⏳</div>
+    <h1>Checking License...</h1>
+    <p>Please wait while we verify your access.</p>
+  </div>
+</div>
+
+<script>
+  const LICENSE = sessionStorage.getItem('ra_license');
+  const TYPE = sessionStorage.getItem('ra_type');
+
+  const content = document.getElementById('content');
+
+  function canDownload() {
+    return LICENSE && (TYPE === 'beta' || TYPE === 'paid' || TYPE === 'master');
+  }
+
+  window.onload = function() {
+    setTimeout(() => {
+      if (!LICENSE) {
+        content.innerHTML = `
+          <div class="icon">🔒</div>
+          <h1>License Required</h1>
+          <p>You need an active ReceiptAgent Pro license to download the APK.</p>
+          <a href="/" class="btn">Get a License</a>
+        `;
+        return;
+      }
+
+      if (TYPE === 'trial') {
+        content.innerHTML = `
+          <div class="icon">⚠️</div>
+          <h1>Upgrade Required</h1>
+          <p>APK download is not available on trial licenses. Contact us to upgrade your account.</p>
+          <a href="https://wa.me/256700000000" class="btn">Contact Support</a>
+          <div class="note">Your trial license: ${LICENSE}</div>
+        `;
+        return;
+      }
+
+      if (canDownload()) {
+        content.innerHTML = `
+          <div class="icon">📱</div>
+          <h1>Download ReceiptAgent Pro</h1>
+          <p>Download the Android app for a faster, offline receipt generation experience.</p>
+          <a href="/api/download-apk?code=${LICENSE}" class="btn">⬇ Download APK</a>
+          <div class="note">Version 1.0 Beta · Android 8.0+</div>
+          <div class="note" style="margin-top:8px">Note: Enable "Install from unknown sources" in your Android settings before installing.</div>
+        `;
+      }
+    }, 800);
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReceiptAgent Pro — Admin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111;
+    --surface2: #161616;
+    --border: #1e1e1e;
+    --accent: #00e5a0;
+    --text: #f0f0f0;
+    --muted: #666;
+    --danger: #ff4444;
+    --warn: #f59e0b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; }
+
+  /* LOGIN */
+  #loginScreen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 360px;
+    text-align: center;
+  }
+
+  .login-card h1 { font-size: 22px; margin-bottom: 6px; }
+  .login-card p { color: var(--muted); font-size: 13px; margin-bottom: 28px; font-family: 'DM Mono', monospace; }
+
+  input[type="password"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+
+  input[type="password"]:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover { background: #00ffb3; }
+
+  /* ADMIN LAYOUT */
+  #adminApp { display: none; }
+
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-logo { font-size: 16px; font-weight: 800; }
+  .nav-logo span { color: var(--accent); }
+  .nav-badge { background: #ff4444; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-family: 'DM Mono', monospace; margin-left: 8px; }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .page { display: none; padding: 32px 24px; }
+  .page.active { display: block; }
+
+  /* STATS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .stat-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 800; }
+  .stat-value.green { color: var(--accent); }
+  .stat-value.red { color: var(--danger); }
+  .stat-value.yellow { color: var(--warn); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  .chip {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .chip-active { background: #00e5a020; color: var(--accent); border: 1px solid #00e5a030; }
+  .chip-inactive { background: #66666620; color: var(--muted); border: 1px solid #66666630; }
+  .chip-expired { background: #ff444420; color: var(--danger); border: 1px solid #ff444430; }
+  .chip-revoked { background: #ff444440; color: var(--danger); border: 1px solid #ff444460; }
+  .chip-beta { background: #7c3aed20; color: #a78bfa; border: 1px solid #7c3aed30; }
+
+  .btn-sm {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: none;
+    color: var(--muted);
+    font-family: 'Syne', sans-serif;
+    transition: all 0.15s;
+    margin-right: 4px;
+  }
+
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-sm.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* GENERATE */
+  .gen-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    margin-bottom: 24px;
+  }
+
+  .gen-card h3 { font-size: 16px; margin-bottom: 16px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus { border-color: var(--accent); }
+
+  .gen-label { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: block; }
+
+  .codes-output {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 2;
+    margin-top: 16px;
+    color: var(--accent);
+    display: none;
+  }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-header h2 { font-size: 18px; font-weight: 700; }
+
+  .search-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    width: 240px;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+
+  .feedback-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .fb-meta { display: flex; gap: 16px; margin-bottom: 12px; font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .fb-rating { background: #f59e0b20; color: var(--warn); padding: 2px 8px; border-radius: 4px; border: 1px solid #f59e0b30; font-size: 11px; }
+  .fb-q { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'DM Mono', monospace; margin-top: 8px; margin-bottom: 2px; }
+  .fb-a { font-size: 13px; color: var(--text); }
+
+  .empty { text-align: center; padding: 48px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div style="font-size:32px;margin-bottom:16px">🔐</div>
+    <h1>Admin Access</h1>
+    <p>ReceiptAgent Pro Dashboard</p>
+    <input type="password" id="adminPass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')login()" />
+    <button class="btn-primary" onclick="login()">Login</button>
+    <div id="loginErr" style="color:#ff4444;font-size:12px;margin-top:12px;font-family:DM Mono,monospace;display:none">Wrong password</div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="adminApp">
+  <nav>
+    <div class="nav-logo">Receipt<span>Agent</span> Admin <span class="nav-badge">ADMIN</span></div>
+    <button onclick="adminLogout()" style="padding:8px 16px;border:1px solid #1e1e1e;background:none;color:#666;border-radius:8px;cursor:pointer;font-family:Syne,sans-serif;font-size:13px">Logout</button>
+  </nav>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('overview')">Overview</button>
+    <button class="tab" onclick="showTab('licenses')">Licenses</button>
+    <button class="tab" onclick="showTab('generate')">Generate Codes</button>
+    <button class="tab" onclick="showTab('analytics')">Analytics</button>
+    <button class="tab" onclick="showTab('feedback')">Feedback</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="page active" id="tab-overview">
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Total Licenses</div><div class="stat-value" id="s-total">—</div></div>
+      <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value green" id="s-active">—</div></div>
+      <div class="stat-card"><div class="stat-label">Beta Users</div><div class="stat-value" style="color:#a78bfa" id="s-beta">—</div></div>
+      <div class="stat-card"><div class="stat-label">Expired</div><div class="stat-value yellow" id="s-expired">—</div></div>
+      <div class="stat-card"><div class="stat-label">Revoked</div><div class="stat-value red" id="s-revoked">—</div></div>
+      <div class="stat-card"><div class="stat-label">Total Receipts</div><div class="stat-value green" id="s-receipts">—</div></div>
+      <div class="stat-card"><div class="stat-label">Feedback Count</div><div class="stat-value" id="s-feedback">—</div></div>
+    </div>
+  </div>
+
+  <!-- LICENSES -->
+  <div class="page" id="tab-licenses">
+    <div class="section-header">
+      <h2>All Licenses</h2>
+      <input type="text" class="search-input" placeholder="Search code or business..." oninput="filterLicenses(this.value)" />
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Business</th>
+            <th>Phone</th>
+            <th>Activated</th>
+            <th>Expires</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="licensesTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- GENERATE -->
+  <div class="page" id="tab-generate">
+    <div class="gen-card">
+      <h3>Generate Beta Codes</h3>
+      <div class="form-row">
+        <div>
+          <span class="gen-label">Number of codes</span>
+          <input type="number" id="genCount" value="1" min="1" max="50" />
+        </div>
+        <div>
+          <span class="gen-label">Business name (optional)</span>
+          <input type="text" id="genBiz" placeholder="e.g. Muhsin Shop" />
+        </div>
+      </div>
+      <div>
+        <span class="gen-label">Phone (optional)</span>
+        <input type="text" id="genPhone" placeholder="0700 000 000" style="width:240px" />
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn-primary" style="width:auto;padding:12px 24px" onclick="generateCodes()">Generate Codes</button>
+      </div>
+      <div class="codes-output" id="codesOutput"></div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="page" id="tab-analytics">
+    <h2 style="margin-bottom:20px">Event Totals</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Count</th></tr></thead>
+        <tbody id="analyticsTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="page" id="tab-feedback">
+    <h2 style="margin-bottom:20px">User Feedback</h2>
+    <div id="feedbackList"></div>
+  </div>
+</div>
+
+<script>
+  let ADMIN_TOKEN = '';
+  let allLicenses = [];
+
+  function login() {
+    const pass = document.getElementById('adminPass').value;
+    ADMIN_TOKEN = pass;
+
+    fetch('/api/admin/stats', { headers: { 'x-admin-token': ADMIN_TOKEN } })
+      .then(r => {
+        if (r.status === 401) {
+          document.getElementById('loginErr').style.display = 'block';
+          return null;
+        }
+        return r.json();
+      })
+      .then(data => {
+        if (!data) return;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('adminApp').style.display = 'block';
+        applyStats(data);
+        loadLicenses();
+      });
+  }
+
+  function adminLogout() {
+    ADMIN_TOKEN = '';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminApp').style.display = 'none';
+  }
+
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', ['overview','licenses','generate','analytics','feedback'][i] === name));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+
+    if (name === 'analytics') loadAnalytics();
+    if (name === 'feedback') loadFeedback();
+    if (name === 'licenses') loadLicenses();
+    if (name === 'overview') loadStats();
+  }
+
+  function loadStats() {
+    fetch('/api/admin/stats', { headers: { 'x-admin-token': ADMIN_TOKEN } })
+      .then(r => r.json()).then(applyStats);
+  }
+
+  function applyStats(data) {
+    document.getElementById('s-total').textContent = data.total_licenses;
+    document.getElementById('s-active').textContent = data.active;
+    document.getElementById('s-beta').textContent = data.beta;
+    document.getElementById('s-expired').textContent = data.expired;
+    document.getElementById('s-revoked').textContent = data.revoked;
+    document.getElementById('s-receipts').textContent = data.total_receipts;
+    document.getElementById('s-feedback').textContent = data.feedback_count;
+  }
+
+  function loadLicenses() {
+    fetch('/api/admin/licenses', { headers: { 'x-admin-token': ADMIN_TOKEN } })
+      .then(r => r.json())
+      .then(data => {
+        allLicenses = data;
+        renderLicenses(data);
+      });
+  }
+
+  function renderLicenses(data) {
+    const tbody = document.getElementById('licensesTable');
+    if (!data.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">No licenses yet</td></tr>'; return; }
+
+    tbody.innerHTML = data.map(l => {
+      const statusChip = l.revoked ? '<span class="chip chip-revoked">revoked</span>' :
+        l.status === 'active' ? '<span class="chip chip-active">active</span>' :
+        l.status === 'expired' ? '<span class="chip chip-expired">expired</span>' :
+        '<span class="chip chip-inactive">inactive</span>';
+
+      const expires = l.expires_at ? new Date(l.expires_at).toLocaleDateString('en-GB') : '—';
+      const activated = l.activated_at ? new Date(l.activated_at).toLocaleDateString('en-GB') : '—';
+
+      return `<tr>
+        <td style="color:var(--accent)">${l.code}</td>
+        <td><span class="chip chip-beta">${l.type}</span></td>
+        <td>${statusChip}</td>
+        <td>${l.business_name || '—'}</td>
+        <td>${l.phone || '—'}</td>
+        <td>${activated}</td>
+        <td>${expires}</td>
+        <td>
+          <button class="btn-sm" onclick="extendLicense('${l.code}')">+7d</button>
+          <button class="btn-sm danger" onclick="revokeLicense('${l.code}')">Revoke</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function filterLicenses(q) {
+    const filtered = allLicenses.filter(l =>
+      l.code.toLowerCase().includes(q.toLowerCase()) ||
+      (l.business_name || '').toLowerCase().includes(q.toLowerCase())
+    );
+    renderLicenses(filtered);
+  }
+
+  function extendLicense(code) {
+    const days = prompt(`Extend "${code}" by how many days?`, '7');
+    if (!days) return;
+    fetch('/api/admin/extend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+      body: JSON.stringify({ code, days: parseInt(days) })
+    }).then(r => r.json()).then(d => { if (d.success) { alert('Extended!'); loadLicenses(); } });
+  }
+
+  function revokeLicense(code) {
+    if (!confirm(`Revoke license "${code}"? This will immediately block the user.`)) return;
+    fetch('/api/admin/revoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+      body: JSON.stringify({ code })
+    }).then(() => loadLicenses());
+  }
+
+  function generateCodes() {
+    const count = parseInt(document.getElementById('genCount').value) || 1;
+    const biz = document.getElementById('genBiz').value;
+    const phone = document.getElementById('genPhone').value;
+
+    fetch('/api/admin/generate-beta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': ADMIN_TOKEN },
+      body: JSON.stringify({ count, business_name: biz, phone })
+    })
+    .then(r => r.json())
+    .then(data => {
+      const out = document.getElementById('codesOutput');
+      out.style.display = 'block';
+      out.innerHTML = data.codes.join('<br>');
+      loadStats();
+    });
+  }
+
+  function loadAnalytics() {
+    fetch('/api/admin/analytics', { headers: { 'x-admin-token': ADMIN_TOKEN } })
+      .then(r => r.json())
+      .then(data => {
+        const tbody = document.getElementById('analyticsTable');
+        if (!data.totals.length) { tbody.innerHTML = '<tr><td colspan="2" class="empty">No events yet</td></tr>'; return; }
+        tbody.innerHTML = data.totals.map(e => `
+          <tr><td>${e.event}</td><td style="color:var(--accent)">${e.count}</td></tr>
+        `).join('');
+      });
+  }
+
+  function loadFeedback() {
+    fetch('/api/admin/feedback', { headers: { 'x-admin-token': ADMIN_TOKEN } })
+      .then(r => r.json())
+      .then(data => {
+        const list = document.getElementById('feedbackList');
+        if (!data.length) { list.innerHTML = '<div class="empty">No feedback submitted yet</div>'; return; }
+
+        list.innerHTML = data.map(f => `
+          <div class="feedback-card">
+            <div class="fb-meta">
+              <span>${f.name || 'Anonymous'}</span>
+              <span>${f.business_name || '—'}</span>
+              <span>${f.phone || '—'}</span>
+              <span>${new Date(f.created_at).toLocaleDateString('en-GB')}</span>
+              <span class="fb-rating">★ ${f.rating}/5</span>
+              <span style="color:${f.would_pay==='Yes, definitely'?'var(--accent)':'var(--muted)'}">${f.would_pay}</span>
+              ${f.suggested_price ? `<span>UGX ${f.suggested_price}</span>` : ''}
+            </div>
+            ${f.what_worked ? `<div class="fb-q">What worked</div><div class="fb-a">${f.what_worked}</div>` : ''}
+            ${f.what_confused ? `<div class="fb-q">What confused</div><div class="fb-a">${f.what_confused}</div>` : ''}
+            ${f.missing_features ? `<div class="fb-q">Missing features</div><div class="fb-a">${f.missing_features}</div>` : ''}
+            ${f.bugs ? `<div class="fb-q">Bugs</div><div class="fb-a">${f.bugs}</div>` : ''}
+          </div>
+        `).join('');
+      });
+  }
+</script>
+</body>
+</html>
